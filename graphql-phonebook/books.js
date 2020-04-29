@@ -1,4 +1,4 @@
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, gql, UserInputError } = require('apollo-server');
 const { v4: uuidv4 } = require('uuid');
 
 let authors = [
@@ -86,11 +86,11 @@ let books = [
 
 const typeDefs = gql`
   type Book {
-    title: String
-    published: Int
-    author: String
+    title: String!
+    published: Int!
+    author: String!
     id: ID
-    genres: [String]
+    genres: [String!]!
   }
 
   type Author {
@@ -156,11 +156,23 @@ const resolvers = {
 
   Mutation: {
     addBook: (root, args) => {
-      const newBook = { ...args, id: uuidv4() };
+      console.log(args);
+      if (!args.title || !args.author || !args.published) {
+        throw new UserInputError('Missing fields', {
+          invalidArgs: args,
+        });
+      }
+      // if (isNaN(args.published)) {
+      //   throw new UserInputError('Published date must be added', {
+      //     invalidArgs: args.published,
+      //   });
+      // }
+      const newBook = {
+        ...args,
+        id: uuidv4(),
+      };
       books = books.concat(newBook);
       const newAuthor = authors.find((a) => a.name === args.author);
-      console.log(args.author);
-      console.log(newAuthor);
       if (newAuthor === undefined) {
         const auth = { name: args.author, id: uuidv4 };
         authors = authors.concat(auth);
