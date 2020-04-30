@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { ALL_AUTHORS, EDIT_AUTHOR } from '../queries';
 
 const AuthorForm = ({ setError, authors }) => {
-  console.log(authors);
   const [name, setName] = useState('');
   const [born, setBorn] = useState('');
 
@@ -20,7 +19,6 @@ const AuthorForm = ({ setError, authors }) => {
   };
 
   useEffect(() => {
-    console.log('useeffect');
     if (result.data && result.data.editAuthor === null) {
       setError('Author not found');
     }

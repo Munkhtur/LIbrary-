@@ -148,7 +148,8 @@ const resolvers = {
 
   Author: {
     bookCount: (root) => {
-      const bc = books.filter((b) => b.author === root.name);
+      const bc = Book.find({ auhtor: root.name });
+      console.log(bc);
       const count = bc.length;
       return count;
     },
