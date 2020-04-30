@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useLazyQuery } from '@apollo/client';
 import { BOOKS_BY_GENRE } from '../queries';
+import _ from 'lodash';
 
 const Books = (props) => {
-  // const [books, setBooks] = useState([]);
+  const [books, setBooks] = useState([]);
   const [genre, setGenre] = useState('');
-  // const result = useQuery(ALL_BOOKS);
-  const result = useQuery(BOOKS_BY_GENRE, {
-    variables: { genre },
-  });
-  // useEffect(() => {
-  //   getBooksByGenre({ variables: { filter } });
-  //   setBooks(result.data.allBooks);
-  // }, [filter]);
+  const [genres, setGenres] = useState('');
+  const result = useQuery(BOOKS_BY_GENRE);
+  const [genreBooks, genreBooksResult] = useLazyQuery(BOOKS_BY_GENRE);
 
-  if (!props.show) {
+  useEffect(() => {
+    console.log('all efect');
+    if (result.data && result.data.allBooks && !genre) {
+      const books = result.data.allBooks;
+      setBooks(books);
+      const genres = _.uniq(books.flatMap((b) => b.genres));
+      setGenres(genres);
+    }
+  }, [result.data, genre]);
+
+  useEffect(() => {
+    console.log('genre effect');
+    if (genreBooksResult.data) {
+      setBooks(genreBooksResult.data.allBooks);
+    }
+  }, [genreBooksResult.data]);
+
+  if (!props.show || !books) {
     return null;
   }
   if (result.loading) {
     return <div>Loading..</div>;
   }
-  const books = result.data.allBooks;
+
+  const onGenreClick = (newGenre) => {
+    setGenre(newGenre);
+    genreBooks({ variables: { genre: newGenre } });
+  };
 
   return (
     <div>
@@ -47,13 +64,12 @@ const Books = (props) => {
         </tbody>
       </table>
       <div>
-        <button onClick={() => setGenre('patterns')}>patterns</button>
-        <button onClick={() => setGenre('design')}>design</button>
-        <button onClick={() => setGenre('refactoring')}>refactoring</button>
-        <button onClick={() => setGenre('crime')}>crime</button>
-        <button onClick={() => setGenre('classic')}>classic</button>
-        <button onClick={() => setGenre('agile')}>agile</button>
-        <button onClick={() => setGenre('')}>all genres</button>
+        {genres.map((g) => (
+          <button key={g} onClick={() => onGenreClick(g)}>
+            {g}
+          </button>
+        ))}
+        <button onClick={() => onGenreClick(null)}>all genres</button>
       </div>
     </div>
   );
